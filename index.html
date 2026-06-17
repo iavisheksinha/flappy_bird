@@ -373,7 +373,7 @@
       localStorage.setItem('flappy_vibrate', vibrateEnabled);
       vibrateBtn.classList.toggle('disabled', !vibrateEnabled);
       if (vibrateEnabled) {
-        triggerVibration(50);
+        triggerVibration(100);
       }
     });
 
@@ -558,7 +558,7 @@
       spawnFeathers(bird.x, bird.y);
       shakeMag = 8;
       playHit();
-      triggerVibration([150, 50, 150]);
+      triggerVibration([350, 100, 350]);
     }
 
     // ── Pipe spawning ──
@@ -642,7 +642,7 @@
               nearMissCount++;
               score += 2;
               playScore();
-              triggerVibration([60, 40, 60]);
+              triggerVibration([120, 60, 120]);
               spawnScorePopup(bird.x, bird.y - 25, '✨ +2');
             }
           }
@@ -652,7 +652,6 @@
             p.scored = true;
             score++;
             playScore();
-            triggerVibration(20);
             spawnScorePopup(bird.x + 20, bird.y - 20, '+1');
           }
 
@@ -672,7 +671,7 @@
               c.collected = true;
               coinCount++;
               playScore();
-              triggerVibration(40);
+              triggerVibration([80, 40, 80]);
               spawnScorePopup(c.x, c.y - 15, '🪙 +1');
               spawnParticles(c.x, c.y, 6, '#ffd700', 0.5);
             }
