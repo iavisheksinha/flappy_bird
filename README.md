@@ -11,6 +11,7 @@ A feature-rich Flappy Bird clone in a single HTML file. No dependencies, just op
 - **11 Achievements**: First flight, coin hoarder, medalist, difficulty wins, and more
 - **Progressive Difficulty**: Pipe speed gradually ramps up during a session
 - **Near-Miss Bonus**: +2 points for tight squeezes beside pipes
+- **Haptic Vibration**: Rich tactile feedback for crashes, scoring, near-misses, and coin collection (can be toggled in the UI)
 - **Stats Tracking**: Games played, total score, coins collected, per-difficulty wins (persisted in localStorage)
 - **Pause / Resume**: Esc or P key, or the pause button
 - **Responsive Canvas**: Scales to fit any screen, fullscreen button included
@@ -22,6 +23,7 @@ A feature-rich Flappy Bird clone in a single HTML file. No dependencies, just op
 |--------|---------|--------|
 | Flap | Space / Click | Tap |
 | Pause | Esc / P | — |
+| Toggle Sound / Vibration | Mouse Click | Tap Buttons |
 
 ## How to Play
 
@@ -32,4 +34,4 @@ A feature-rich Flappy Bird clone in a single HTML file. No dependencies, just op
 
 ## Files
 
-- `flappy.html` — the entire game
+- `index.html` — the entire game
