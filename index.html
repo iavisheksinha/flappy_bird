@@ -139,6 +139,30 @@
       transition: background 0.2s;
     }
     #muteBtn:hover { background: rgba(0,0,0,0.6); }
+    #vibrateBtn {
+      position: absolute;
+      top: 12px;
+      right: 60px;
+      background: rgba(0,0,0,0.4);
+      border: none;
+      color: white;
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: auto;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    #vibrateBtn:hover { background: rgba(0,0,0,0.6); }
+    #vibrateBtn.disabled {
+      opacity: 0.4;
+      filter: grayscale(1);
+    }
     #pauseBtn {
       position: absolute;
       top: 12px;
@@ -185,6 +209,7 @@
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+    <button id="vibrateBtn" aria-label="Toggle vibration">📳</button>
     <button id="pauseBtn" aria-label="Pause" style="display:none">⏸</button>
     <button id="fullscreenBtn" aria-label="Toggle fullscreen">⛶</button>
     <div id="ui">
@@ -238,6 +263,7 @@
     const startBtn = document.getElementById('startBtn');
     const restartBtn = document.getElementById('restartBtn');
     const muteBtn = document.getElementById('muteBtn');
+    const vibrateBtn = document.getElementById('vibrateBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const pauseScreen = document.getElementById('pauseScreen');
     const resumeBtn = document.getElementById('resumeBtn');
@@ -288,9 +314,14 @@
       { id:'hard_win', label:'Hardcore', desc:'Win on Hard', check: s => s.diffWins.hard >= 1, icon:'🔴' },
     ];
 
-    // ── Audio ──
+    // ── Audio & Vibration Settings ──
     let audioCtx = null;
-    let muted = false;
+    let muted = localStorage.getItem('flappy_muted') === 'true';
+    let vibrateEnabled = localStorage.getItem('flappy_vibrate') !== 'false';
+
+    // Sync button states on load
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    vibrateBtn.classList.toggle('disabled', !vibrateEnabled);
 
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -333,13 +364,39 @@
 
     muteBtn.addEventListener('click', () => {
       muted = !muted;
+      localStorage.setItem('flappy_muted', muted);
       muteBtn.textContent = muted ? '🔇' : '🔊';
     });
+
+    vibrateBtn.addEventListener('click', () => {
+      vibrateEnabled = !vibrateEnabled;
+      localStorage.setItem('flappy_vibrate', vibrateEnabled);
+      vibrateBtn.classList.toggle('disabled', !vibrateEnabled);
+      if (vibrateEnabled) {
+        triggerVibration(50);
+      }
+    });
+
+    function triggerVibration(pattern) {
+      if (!vibrateEnabled) return;
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate(pattern);
+        } catch (e) {
+          console.warn("Vibration failed:", e);
+        }
+      }
+    }
 
     // ── State ──
     let state = 'menu';
     let difficulty = 'easy';
     let bestScores = { easy:0, medium:0, hard:0 };
+    try {
+      const savedScores = localStorage.getItem('flappy_best_scores');
+      if (savedScores) Object.assign(bestScores, JSON.parse(savedScores));
+    } catch (e) {}
+
     let lastTime = 0;
     let elapsed = 0;
 
@@ -365,6 +422,10 @@
       diffWins:{ easy:0, medium:0, hard:0 },
       achievements:[],
     };
+    try {
+      const savedStats = localStorage.getItem('flappy_stats');
+      if (savedStats) Object.assign(stats, JSON.parse(savedStats));
+    } catch (e) {}
 
     function reset() {
       bird = { x:80, y:H/2, vy:0, rot:0 };
@@ -434,6 +495,9 @@
       pauseScreen.style.display = 'none';
       pauseBtn.style.display = 'flex';
       stats.gamesPlayed++;
+      try {
+        localStorage.setItem('flappy_stats', JSON.stringify(stats));
+      } catch (e) {}
       initAudio();
     }
 
@@ -466,6 +530,12 @@
       stats.totalCoins += coinCount;
       checkAchievements();
 
+      // Save best scores and stats
+      try {
+        localStorage.setItem('flappy_best_scores', JSON.stringify(bestScores));
+        localStorage.setItem('flappy_stats', JSON.stringify(stats));
+      } catch (e) {}
+
       const medal = getMedal(score);
       finalScore.textContent = `${medal.emoji} Score: ${score}  ${medal.label}`;
       bestScoreLabel.textContent = `Best: ${bestScores[difficulty]}  (${d.label})  Coins: ${coinCount}`;
@@ -488,6 +558,7 @@
       spawnFeathers(bird.x, bird.y);
       shakeMag = 8;
       playHit();
+      triggerVibration([150, 50, 150]);
     }
 
     // ── Pipe spawning ──
@@ -571,6 +642,7 @@
               nearMissCount++;
               score += 2;
               playScore();
+              triggerVibration([60, 40, 60]);
               spawnScorePopup(bird.x, bird.y - 25, '✨ +2');
             }
           }
@@ -580,6 +652,7 @@
             p.scored = true;
             score++;
             playScore();
+            triggerVibration(20);
             spawnScorePopup(bird.x + 20, bird.y - 20, '+1');
           }
 
@@ -599,6 +672,7 @@
               c.collected = true;
               coinCount++;
               playScore();
+              triggerVibration(40);
               spawnScorePopup(c.x, c.y - 15, '🪙 +1');
               spawnParticles(c.x, c.y, 6, '#ffd700', 0.5);
             }
